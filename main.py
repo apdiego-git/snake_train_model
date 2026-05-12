@@ -1,5 +1,6 @@
 import pygame #Start of game background
 import random
+import database
 
 pygame.init()
 
@@ -27,6 +28,20 @@ class Game: #Game implementation
         self.body = [(2,5), (1,5), (0,5)]
         self.direction = "RIGHT"
         self.apple = (6,5)
+        self.attempt = 0
+        self.input = 0
+        self.steps = 0
+        self.death = 'N'
+
+    def reset(self):
+        self.length = 3
+        self.body = [(2,5), (1,5), (0,5)]
+        self.direction = "RIGHT"
+        self.apple = (6,5)
+        self.attempt += 1
+        self.input = 0
+        self.steps = 0
+        self.death = 'N'
 
     def head(self):
         return self.body[0]
@@ -49,19 +64,23 @@ class Game: #Game implementation
         result = self.crash()
         if(result != "GROW"):
                 self.body.pop()
+
+        self.steps += 1
         return result
 
     def crash(self):
         if(self.head()[0] > 9 or self.head()[0] < 0 or self.head()[1] > 9 or self.head()[1] < 0):
+            self.death = 'W'
             return "END"
 
         for cell in self.body[1:]:
             if(self.head() == cell):
+                self.death = 'B'
                 return "END"
             
         if(self.head() == self.apple):
             self.length += 1
-            if(self.length == 98):
+            if(self.length == 99):
                 return "WIN"
             
             while(self.apple in self.body):
@@ -91,14 +110,18 @@ while run: #loop that checks for game state
     pygame.display.update()
     dt = time.tick(FPS)
     state = my_snake.update()
+
+    if state == "END":
+            database.insert_attempt(my_snake)
+            my_snake.reset()
+    if state == "WIN":
+        database.insert_attempt(my_snake)
+        run = False
+        display.blit(win_text, text_rect)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if state == "END":
-            run = False
-        if state == "WIN":
-            run = False
-            display.blit(win_text, text_rect)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
@@ -109,6 +132,7 @@ while run: #loop that checks for game state
                 my_snake.direction = "DOWN"
             if event.key == pygame.K_UP:
                 my_snake.direction = "UP"
+            my_snake.input += 1
 
 
 if state == "WIN":
