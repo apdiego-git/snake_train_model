@@ -1,7 +1,8 @@
 import pygame #Start of game background
 import random
 import database
-
+from agent import Agent
+import numpy as np
 pygame.init()
 
 
@@ -48,7 +49,31 @@ class Game: #Game implementation
     
     def tail(self):
         return self.body[-1]
-
+    
+    def collision_body_up(self):
+        return (self.head()[0], self.head()[1] - 1) in self.body[1:]
+    
+    def collision_body_down(self):
+        return (self.head()[0], self.head()[1] + 1) in self.body[1:]
+    
+    def collision_body_left(self):
+        return (self.head()[0] - 1, self.head()[1]) in self.body[1:]
+    
+    def collision_body_right(self):
+        return (self.head()[0] + 1, self.head()[1]) in self.body[1:]
+            
+    def collision_wall_up(self):    
+        return (self.head()[1] - 1 < 0)
+    
+    def collision_wall_down(self):    
+        return (self.head()[1] + 1 > 9)
+    
+    def collision_wall_left(self):    
+        return (self.head()[0] - 1 < 0)
+    
+    def collision_wall_right(self):    
+        return (self.head()[0] + 1 > 9)
+    
     def update(self):
         if(self.direction == "LEFT"):
             new_tuple = ((self.head()[0] - 1), self.head()[1])
@@ -101,7 +126,7 @@ class Game: #Game implementation
 
 
 my_snake = Game()
-
+my_agent = Agent()
 run = True
 
 while run: #loop that checks for game state
@@ -109,11 +134,37 @@ while run: #loop that checks for game state
     my_snake.draw()
     pygame.display.update()
     dt = time.tick(FPS)
+
+    agent_state = my_agent.binary_to_int(my_snake)
+    agent_move = my_agent.decide(my_snake)
+    if(agent_move == 0):
+        my_snake.direction = "UP"
+        my_snake.input += 1
+    if(agent_move == 1):
+        my_snake.direction = "DOWN"
+        my_snake.input += 1
+    if(agent_move == 2):
+        my_snake.direction = "LEFT"
+        my_snake.input += 1
+    if(agent_move == 3):
+        my_snake.direction = "RIGHT"
+        my_snake.input += 1
     state = my_snake.update()
+
+    reward = 0
+    if(state == "GROW"):
+        reward = 3
+    elif(state == "END"):
+        reward = -10
+    else:
+        reward = 0
+    next_state = my_agent.binary_to_int(my_snake)
+    my_agent.update(agent_state, agent_move, reward, next_state)
 
     if state == "END":
             database.insert_attempt(my_snake)
             my_snake.reset()
+            my_agent.exploration_rate = max(my_agent.min_exploration, my_agent.exploration_rate * my_agent.decay_rate)
     if state == "WIN":
         database.insert_attempt(my_snake)
         run = False
@@ -121,6 +172,7 @@ while run: #loop that checks for game state
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            np.save("q_table.npy", my_agent.q_table)
             run = False
 
         if event.type == pygame.KEYDOWN:
@@ -142,7 +194,8 @@ if state == "WIN":
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                np.save("q_table.npy", my_agent.q_table)
                 pygame.quit()
-
+                
 pygame.quit()
 
