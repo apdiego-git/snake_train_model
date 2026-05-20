@@ -9,12 +9,15 @@ class Agent: #class for snake agent
     def __init__(self):
         self.learning_rate = .25
         self.discount_factor = .90
-        self.exploration_rate = 1.0
+        try:
+            self.exploration_rate = np.load("exploration_rate.npy")
+        except:
+            self.exploration_rate = 1.0
         try:
             self.q_table = np.load("q_table.npy")
         except:
             self.q_table = np.zeros((256, 4))
-        self.decay_rate = .995
+        self.decay_rate = .999
         self.min_exploration = .025
 
     def monitor(self, snake): #function that looks at game state and returns 8 binary numbers

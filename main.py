@@ -29,7 +29,7 @@ class Game: #Game implementation
         self.body = [(2,5), (1,5), (0,5)]
         self.direction = "RIGHT"
         self.apple = (6,5)
-        self.attempt = 0
+        self.attempt = database.get_max_attempt()
         self.input = 0
         self.steps = 0
         self.death = 'N'
@@ -172,7 +172,9 @@ while run: #loop that checks for game state
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            print(my_agent.exploration_rate)
             np.save("q_table.npy", my_agent.q_table)
+            np.save("exploration_rate.npy", my_agent.exploration_rate)
             run = False
 
         if event.type == pygame.KEYDOWN:
@@ -195,7 +197,8 @@ if state == "WIN":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 np.save("q_table.npy", my_agent.q_table)
+                np.save("exploration_rate.npy", my_agent.exploration_rate)
                 pygame.quit()
-                
+
 pygame.quit()
 
