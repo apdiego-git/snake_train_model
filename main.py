@@ -17,7 +17,7 @@ win_text = font.render("You Win!", True, GREEN)
 text_rect = win_text.get_rect(center=(400, 400))
 
 time = pygame.time.Clock()
-FPS = 4
+FPS = 240
 
 display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -128,6 +128,7 @@ class Game: #Game implementation
 my_snake = Game()
 my_agent = Agent()
 run = True
+agent_move = "NONE"
 
 while run: #loop that checks for game state
     display.fill(BLACK)
@@ -136,18 +137,17 @@ while run: #loop that checks for game state
     dt = time.tick(FPS)
 
     agent_state = my_agent.binary_to_int(my_snake)
+    prev_direction = agent_move
     agent_move = my_agent.decide(my_snake)
     if(agent_move == 0):
         my_snake.direction = "UP"
-        my_snake.input += 1
     if(agent_move == 1):
         my_snake.direction = "DOWN"
-        my_snake.input += 1
     if(agent_move == 2):
         my_snake.direction = "LEFT"
-        my_snake.input += 1
     if(agent_move == 3):
         my_snake.direction = "RIGHT"
+    if( agent_move != prev_direction):
         my_snake.input += 1
     state = my_snake.update()
 
@@ -157,7 +157,7 @@ while run: #loop that checks for game state
     elif(state == "END"):
         reward = -10
     else:
-        reward = 0
+        reward = -0.1
     next_state = my_agent.binary_to_int(my_snake)
     my_agent.update(agent_state, agent_move, reward, next_state)
 

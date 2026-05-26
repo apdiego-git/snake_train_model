@@ -18,7 +18,7 @@ class Agent: #class for snake agent
         except:
             self.q_table = np.zeros((256, 4))
         self.decay_rate = .999
-        self.min_exploration = .025
+        self.min_exploration = .005
 
     def monitor(self, snake): #function that looks at game state and returns 8 binary numbers
         eight_digits = np.zeros(8)
